@@ -52,3 +52,15 @@ app.post("/verify-otp", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+
+// যুক্ত করা হয়েছে in githuf
+const cors = require("cors");
+
+// Allow only your frontend origin
+app.use(cors({
+  origin: "https://otp-verification-app-nj90.onrender.com",  // তোমার frontend URL
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
