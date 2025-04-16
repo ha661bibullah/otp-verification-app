@@ -65,16 +65,14 @@ button:hover {
 
   
   <script>
-    const BASE_URL = "https://otp-verification-server-abc1.onrender.com/send-otp"; // এটাকে তোমার Render Backend URL দিয়ে Replace করো
-
-function sendOTP() {
+    function sendOTP() {
   const email = document.getElementById("email").value;
   if (!email) {
     alert("ইমেইল ঠিকমতো লিখুন!");
     return;
   }
 
-  fetch(`${BASE_URL}/send-otp`, {
+  fetch("/send-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -103,7 +101,7 @@ function verifyOTP() {
     return;
   }
 
-  fetch(`${BASE_URL}/verify-otp`, {
+  fetch("/verify-otp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, otp }),
