@@ -5,13 +5,22 @@ const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS সেটআপ (শুধু একবার এবং সঠিকভাবে)
+app.use(cors({
+  origin: "https://otp-verification-app-nj90.onrender.com", // তোমার frontend live URL
+  methods: ["GET", "POST", "OPTIONS"],
+  credentials: true
+}));
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public"))); // Static frontend serve
+
+// ✅ Static frontend serve (HTML, CSS, JS ফাইল public ফোল্ডার থেকে দেখাবে)
+app.use(express.static(path.join(__dirname, "public")));
 
 let otpStore = {};
 
-// Email sender config
+// ✅ Nodemailer config
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -20,7 +29,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Send OTP route
+// ✅ Send OTP route
 app.post("/send-otp", (req, res) => {
   const { email } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -39,7 +48,7 @@ app.post("/send-otp", (req, res) => {
   });
 });
 
-// Verify OTP
+// ✅ Verify OTP route
 app.post("/verify-otp", (req, res) => {
   const { email, otp } = req.body;
   if (otpStore[email] === otp) {
@@ -50,17 +59,6 @@ app.post("/verify-otp", (req, res) => {
   }
 });
 
+// ✅ Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-// যুক্ত করা হয়েছে in githuf
-const cors = require("cors");
-
-// Allow only your frontend origin
-app.use(cors({
-  origin: "https://otp-verification-app-nj90.onrender.com",  // তোমার frontend URL
-  methods: ["GET", "POST"],
-  credentials: true
-}));
-
