@@ -1,51 +1,54 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const dotenv = require("dotenv");
+const path = require("path");
 const cors = require("cors");
-
-dotenv.config();
+require("dotenv").config();
 
 const app = express();
-const port = 5000;
-
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static("public"));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public"))); // Static frontend serve
 
-app.post("/send-otp", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, message: "ইমেইল দেওয়া হয়নি!" });
-    }
+let otpStore = {};
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
+// Email sender config
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+// Send OTP route
+app.post("/send-otp", (req, res) => {
+  const { email } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore[email] = otp;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "আপনার OTP কোড",
-      text: `আপনার OTP কোড হলো: ${otp}`,
-    });
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Your OTP Code",
+    text: `Your OTP code is ${otp}`,
+  };
 
-    res.json({ success: true, otp }); // ডেভেলপমেন্টে otp ফেরত দিচ্ছি
-  } catch (err) {
-    console.error("OTP পাঠাতে সমস্যা:", err);
-    res.status(500).json({ success: false, message: "সার্ভার ত্রুটি!" });
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) return res.status(500).send("Email send failed");
+    res.send("OTP sent successfully");
+  });
+});
+
+// Verify OTP
+app.post("/verify-otp", (req, res) => {
+  const { email, otp } = req.body;
+  if (otpStore[email] === otp) {
+    delete otpStore[email];
+    res.send("OTP verified successfully");
+  } else {
+    res.status(400).send("Invalid OTP");
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server চলছে: http://localhost:${port}`);
-});
-
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
